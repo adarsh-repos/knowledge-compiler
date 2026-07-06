@@ -90,6 +90,8 @@ npm run dev
 
 Open http://localhost:5173
 
+> **Note:** `frontend/src/sarkariexamsAI/` is a separate exam-prep app kept **local only** (gitignored). This repo ships the Knowledge Compiler UI (upload, pipeline, validation).
+
 ---
 
 ## 6. Run the extraction pipeline

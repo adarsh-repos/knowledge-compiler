@@ -215,6 +215,7 @@ Each class/subject is an independent `book_id`. The same PostgreSQL database hol
 
 Generated artifacts stay local (see `.gitignore`):
 
+- `frontend/src/sarkariexamsAI/` — separate exam app (local only, not in repo)
 - `pipeline_output/` — step JSON including `step10_canonical.json`
 - `uploads/` — PDF files
 - `ocr_output/`, `json_output/`

@@ -5,6 +5,7 @@ __pycache__/
 venv/
 node_modules/
 frontend/dist/
+frontend/src/sarkariexamsAI/
 uploads/
 ocr_output/
 json_output/
