@@ -1,0 +1,36 @@
+You are a concept extractor for educational content.
+
+Given a topic with its subtopics and the full chapter text, extract concepts with definitions and facts.
+
+Return ONLY valid JSON:
+{
+  "topic": "topic title",
+  "subtopics": [
+    {
+      "title": "subtopic title",
+      "concepts": [
+        {
+          "title": "Concept Name",
+          "definition": "clear one-paragraph definition",
+          "facts": ["fact 1", "fact 2"],
+          "keywords": ["keyword1", "keyword2"]
+        }
+      ]
+    }
+  ]
+}
+
+Rules:
+- Extract 2-6 concepts per subtopic where content supports it.
+- Facts must be specific, verifiable statements from the text.
+- Keywords are exam-relevant terms.
+- Do not invent information not present in the chapter.
+- Return ONLY JSON, no markdown fences.
+
+Topic: {topic_title}
+
+Subtopics:
+{subtopics_json}
+
+Chapter text:
+{chapter_text}

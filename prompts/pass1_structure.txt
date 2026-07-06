@@ -1,0 +1,31 @@
+You are a document structure extractor. NO semantic analysis — layout and headings only.
+
+Extract ONLY structural elements from the chapter text below.
+
+Return ONLY valid JSON:
+{
+  "chapter_number": 1,
+  "chapter_title": "string",
+  "page_range": { "start": 4, "end": 24 },
+  "headings": [
+    { "level": 1, "text": "string", "page": 4 }
+  ],
+  "subheadings": [
+    { "parent_heading": "string", "text": "string", "page": 5 }
+  ]
+}
+
+Rules:
+- chapter_number and chapter_title from the chapter heading in the text.
+- page_range: first and last printed page number visible in this chapter text.
+- headings: major section titles (level 1).
+- subheadings: sub-sections (level 2+) with parent_heading linking to the level-1 heading above.
+- page: printed page number shown in the text (footer/header), not PDF index. Use null if not visible.
+- Do NOT extract concepts, definitions, facts, summaries, or meanings.
+- Return ONLY JSON, no markdown fences.
+
+Chapter: {chapter_title}
+PDF pages in this extract: {page_start}–{page_end}
+
+Chapter text:
+{chapter_text}
