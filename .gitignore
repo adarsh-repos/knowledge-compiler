@@ -16,5 +16,6 @@ exports/
 *.sql
 knowledge_compiler_db.zip
 .env.bak
+.env.supabase
 .DS_Store
 *.egg-info/

@@ -107,6 +107,25 @@ def topic_step(
     return data
 
 
+@router.get("/{book_id}/chapters/{chapter_id}/topics/{topic_id}/next")
+def topic_next(
+    book_id: str,
+    chapter_id: str,
+    topic_id: str,
+    svc: CoursesService = Depends(_svc),
+):
+    """
+    **Next topic** — after finishing a topic, resolve the next one in reading order.
+
+    Returns current topic metadata, next topic (if any), and book-level progress counts.
+    Client marks completion locally until user progress is persisted server-side.
+    """
+    data = svc.get_next_topic(book_id, chapter_id, topic_id)
+    if not data:
+        raise HTTPException(404, "Topic not found")
+    return data
+
+
 @router.get("/{book_id}/continue")
 def continue_reading(
     book_id: str,
@@ -128,22 +147,22 @@ def continue_reading(
         raise HTTPException(404, "No chapters")
 
     ch = next((c for c in chapters if c["chapter_id"] == chapter_id), chapters[0])
-    topics = ch["topics"]
-    topic = next((t for t in topics if t["topic_id"] == topic_id), topics[0] if topics else None)
-
-    if not topic:
+    units = svc._reading_units(ch["topics"])
+    if not units:
         raise HTTPException(404, "No topics in chapter")
 
-    intro = svc.get_topic_intro(book_id, ch["chapter_id"], topic["topic_id"])
+    unit = next((u for u in units if u["topic_id"] == topic_id), units[0])
+
+    intro = svc.get_topic_intro(book_id, ch["chapter_id"], unit["topic_id"])
     return {
         "label": f"{course['subject']} · Ch. {ch['number']:02d}",
         "book_id": book_id,
         "chapter_id": ch["chapter_id"],
-        "topic_id": topic["topic_id"],
-        "title": topic["title"],
-        "page_label": topic.get("page_label", ""),
+        "topic_id": unit["topic_id"],
+        "title": unit["title"],
+        "page_label": unit.get("page_label", ""),
         "estimated_minutes": intro["module"]["estimated_minutes"] if intro else None,
         "resume_url": (
-            f"/courses/{book_id}/chapters/{ch['chapter_id']}/topics/{topic['topic_id']}"
+            f"/learn?book={book_id}&chapter={ch['chapter_id']}&topic={unit['topic_id']}"
         ),
     }

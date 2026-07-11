@@ -66,6 +66,18 @@ class BookRow(Base):
     glossary_entries: Mapped[List[GlossaryEntryRow]] = relationship(
         back_populates="book", cascade="all, delete-orphan"
     )
+    ingestion_runs: Mapped[List[IngestionRunRow]] = relationship(
+        back_populates="book", cascade="all, delete-orphan"
+    )
+    book_versions: Mapped[List[BookVersionRow]] = relationship(
+        back_populates="book", cascade="all, delete-orphan"
+    )
+    reading_progress: Mapped[List[ReadingProgressRow]] = relationship(
+        back_populates="book", cascade="all, delete-orphan"
+    )
+    topic_completions: Mapped[List[TopicCompletionRow]] = relationship(
+        back_populates="book", cascade="all, delete-orphan"
+    )
 
 
 class ChapterRow(Base):
@@ -153,9 +165,15 @@ class BlockRow(Base):
     book_id: Mapped[str] = mapped_column(
         String(64), ForeignKey("books.book_id", ondelete="CASCADE"), nullable=False
     )
-    chapter_id: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
-    section_id: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
-    subsection_id: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    chapter_id: Mapped[Optional[str]] = mapped_column(
+        String(64), ForeignKey("chapters.chapter_id", ondelete="SET NULL"), nullable=True
+    )
+    section_id: Mapped[Optional[str]] = mapped_column(
+        String(128), ForeignKey("sections.section_id", ondelete="SET NULL"), nullable=True
+    )
+    subsection_id: Mapped[Optional[str]] = mapped_column(
+        String(128), ForeignKey("subsections.subsection_id", ondelete="SET NULL"), nullable=True
+    )
     chapter_roman: Mapped[Optional[str]] = mapped_column(String(16), nullable=True)
     chapter_title: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
     topic_number: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
@@ -191,9 +209,15 @@ class ParagraphRow(Base):
     book_id: Mapped[str] = mapped_column(
         String(64), ForeignKey("books.book_id", ondelete="CASCADE"), nullable=False
     )
-    chapter_id: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
-    section_id: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
-    subsection_id: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    chapter_id: Mapped[Optional[str]] = mapped_column(
+        String(64), ForeignKey("chapters.chapter_id", ondelete="SET NULL"), nullable=True
+    )
+    section_id: Mapped[Optional[str]] = mapped_column(
+        String(128), ForeignKey("sections.section_id", ondelete="SET NULL"), nullable=True
+    )
+    subsection_id: Mapped[Optional[str]] = mapped_column(
+        String(128), ForeignKey("subsections.subsection_id", ondelete="SET NULL"), nullable=True
+    )
     order: Mapped[int] = mapped_column(Integer, nullable=False)
     text: Mapped[str] = mapped_column(Text, nullable=False)
     page: Mapped[int] = mapped_column(Integer, nullable=False)
@@ -215,9 +239,15 @@ class FigureRow(Base):
     book_id: Mapped[str] = mapped_column(
         String(64), ForeignKey("books.book_id", ondelete="CASCADE"), nullable=False
     )
-    chapter_id: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
-    section_id: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
-    subsection_id: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    chapter_id: Mapped[Optional[str]] = mapped_column(
+        String(64), ForeignKey("chapters.chapter_id", ondelete="SET NULL"), nullable=True
+    )
+    section_id: Mapped[Optional[str]] = mapped_column(
+        String(128), ForeignKey("sections.section_id", ondelete="SET NULL"), nullable=True
+    )
+    subsection_id: Mapped[Optional[str]] = mapped_column(
+        String(128), ForeignKey("subsections.subsection_id", ondelete="SET NULL"), nullable=True
+    )
     page: Mapped[int] = mapped_column(Integer, nullable=False)
     image_id: Mapped[str] = mapped_column(String(32), nullable=False)
     caption: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
@@ -237,9 +267,15 @@ class ActivityRow(Base):
     book_id: Mapped[str] = mapped_column(
         String(64), ForeignKey("books.book_id", ondelete="CASCADE"), nullable=False
     )
-    chapter_id: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
-    section_id: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
-    subsection_id: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    chapter_id: Mapped[Optional[str]] = mapped_column(
+        String(64), ForeignKey("chapters.chapter_id", ondelete="SET NULL"), nullable=True
+    )
+    section_id: Mapped[Optional[str]] = mapped_column(
+        String(128), ForeignKey("sections.section_id", ondelete="SET NULL"), nullable=True
+    )
+    subsection_id: Mapped[Optional[str]] = mapped_column(
+        String(128), ForeignKey("subsections.subsection_id", ondelete="SET NULL"), nullable=True
+    )
     page: Mapped[int] = mapped_column(Integer, nullable=False)
     title: Mapped[str] = mapped_column(String(256), nullable=False)
     body: Mapped[str] = mapped_column(Text, nullable=False)
@@ -261,9 +297,15 @@ class TableRow(Base):
     book_id: Mapped[str] = mapped_column(
         String(64), ForeignKey("books.book_id", ondelete="CASCADE"), nullable=False
     )
-    chapter_id: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
-    section_id: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
-    subsection_id: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    chapter_id: Mapped[Optional[str]] = mapped_column(
+        String(64), ForeignKey("chapters.chapter_id", ondelete="SET NULL"), nullable=True
+    )
+    section_id: Mapped[Optional[str]] = mapped_column(
+        String(128), ForeignKey("sections.section_id", ondelete="SET NULL"), nullable=True
+    )
+    subsection_id: Mapped[Optional[str]] = mapped_column(
+        String(128), ForeignKey("subsections.subsection_id", ondelete="SET NULL"), nullable=True
+    )
     page: Mapped[int] = mapped_column(Integer, nullable=False)
     rows: Mapped[int] = mapped_column(Integer, nullable=False)
     columns: Mapped[int] = mapped_column(Integer, nullable=False)
@@ -304,9 +346,15 @@ class GlossaryEntryRow(Base):
     book_id: Mapped[str] = mapped_column(
         String(64), ForeignKey("books.book_id", ondelete="CASCADE"), nullable=False
     )
-    chapter_id: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
-    section_id: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
-    subsection_id: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    chapter_id: Mapped[Optional[str]] = mapped_column(
+        String(64), ForeignKey("chapters.chapter_id", ondelete="SET NULL"), nullable=True
+    )
+    section_id: Mapped[Optional[str]] = mapped_column(
+        String(128), ForeignKey("sections.section_id", ondelete="SET NULL"), nullable=True
+    )
+    subsection_id: Mapped[Optional[str]] = mapped_column(
+        String(128), ForeignKey("subsections.subsection_id", ondelete="SET NULL"), nullable=True
+    )
     page: Mapped[int] = mapped_column(Integer, nullable=False)
     word: Mapped[str] = mapped_column(Text, nullable=False)
     meaning: Mapped[str] = mapped_column(Text, nullable=False)
@@ -317,4 +365,136 @@ class GlossaryEntryRow(Base):
     __table_args__ = (
         Index("ix_glossary_book_chapter", "book_id", "chapter_id"),
         Index("ix_glossary_book_word", "book_id", "word"),
+    )
+
+
+class IngestionRunRow(Base):
+    __tablename__ = "ingestion_runs"
+
+    run_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    book_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey("books.book_id", ondelete="CASCADE"), nullable=False
+    )
+    status: Mapped[str] = mapped_column(String(32), nullable=False, default="started")
+    pipeline_version: Mapped[str] = mapped_column(String(64), nullable=False, default="v1")
+    source_file_hash: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    source_path: Mapped[Optional[str]] = mapped_column(String(1024), nullable=True)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, nullable=False)
+    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    step10_path: Mapped[Optional[str]] = mapped_column(String(1024), nullable=True)
+    stats: Mapped[Optional[Dict[str, Any]]] = mapped_column(JsonColumn, nullable=True)
+    error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    book: Mapped[BookRow] = relationship(back_populates="ingestion_runs")
+    versions: Mapped[List[BookVersionRow]] = relationship(
+        back_populates="ingestion_run", cascade="all, delete-orphan"
+    )
+
+    __table_args__ = (
+        Index("ix_ingestion_runs_book", "book_id"),
+        Index("ix_ingestion_runs_status", "status"),
+    )
+
+
+class BookVersionRow(Base):
+    __tablename__ = "book_versions"
+
+    version_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    book_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey("books.book_id", ondelete="CASCADE"), nullable=False
+    )
+    run_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("ingestion_runs.run_id", ondelete="CASCADE"), nullable=False
+    )
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    activated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, nullable=False)
+    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    book: Mapped[BookRow] = relationship(back_populates="book_versions")
+    ingestion_run: Mapped[IngestionRunRow] = relationship(back_populates="versions")
+
+    __table_args__ = (
+        Index("ix_book_versions_book", "book_id"),
+        Index("ix_book_versions_active", "book_id", "is_active"),
+    )
+
+
+class UserRow(Base):
+    __tablename__ = "users"
+
+    user_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    external_ref: Mapped[Optional[str]] = mapped_column(String(128), nullable=True, unique=True)
+    display_name: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, onupdate=_utcnow, nullable=False
+    )
+
+    reading_progress: Mapped[List[ReadingProgressRow]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+    topic_completions: Mapped[List[TopicCompletionRow]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
+
+
+class ReadingProgressRow(Base):
+    __tablename__ = "reading_progress"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False
+    )
+    book_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey("books.book_id", ondelete="CASCADE"), nullable=False
+    )
+    chapter_id: Mapped[Optional[str]] = mapped_column(
+        String(64), ForeignKey("chapters.chapter_id", ondelete="SET NULL"), nullable=True
+    )
+    section_id: Mapped[Optional[str]] = mapped_column(
+        String(128), ForeignKey("sections.section_id", ondelete="SET NULL"), nullable=True
+    )
+    subsection_id: Mapped[Optional[str]] = mapped_column(
+        String(128), ForeignKey("subsections.subsection_id", ondelete="SET NULL"), nullable=True
+    )
+    percent_complete: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    last_read_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, nullable=False)
+
+    user: Mapped[UserRow] = relationship(back_populates="reading_progress")
+    book: Mapped[BookRow] = relationship(back_populates="reading_progress")
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "book_id", name="uq_reading_progress_user_book"),
+        Index("ix_reading_progress_user", "user_id"),
+        Index("ix_reading_progress_book", "book_id"),
+    )
+
+
+class TopicCompletionRow(Base):
+    __tablename__ = "topic_completions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False
+    )
+    book_id: Mapped[str] = mapped_column(
+        String(64), ForeignKey("books.book_id", ondelete="CASCADE"), nullable=False
+    )
+    section_id: Mapped[Optional[str]] = mapped_column(
+        String(128), ForeignKey("sections.section_id", ondelete="SET NULL"), nullable=True
+    )
+    subsection_id: Mapped[Optional[str]] = mapped_column(
+        String(128), ForeignKey("subsections.subsection_id", ondelete="SET NULL"), nullable=True
+    )
+    completed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow, nullable=False)
+    source: Mapped[str] = mapped_column(String(32), nullable=False, default="app")
+
+    user: Mapped[UserRow] = relationship(back_populates="topic_completions")
+    book: Mapped[BookRow] = relationship(back_populates="topic_completions")
+
+    __table_args__ = (
+        UniqueConstraint(
+            "user_id", "book_id", "section_id", "subsection_id", name="uq_topic_completion_scope"
+        ),
+        Index("ix_topic_completions_user_book", "user_id", "book_id"),
     )

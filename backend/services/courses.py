@@ -101,6 +101,13 @@ class CoursesService:
 
         continue_item = self._default_continue(books)
 
+        if continue_item and continue_item.get("topic_id"):
+            continue_item["resume_url"] = (
+                f"/learn?book={continue_item['book_id']}"
+                f"&chapter={continue_item['chapter_id']}"
+                f"&topic={continue_item['topic_id']}"
+            )
+
         return {
             "stats": {
                 "subjects_count": len(subjects),
@@ -122,6 +129,7 @@ class CoursesService:
         topics_total = 0
         for ch in self.repo.list_chapters(book_id):
             topics = self._chapter_topics(book_id, ch)
+            units = self._reading_units(topics)
             topics_total += len(topics)
             ch_pages = self._chapter_page_range(book_id, ch.chapter_id)
             chapters_out.append(
@@ -137,6 +145,8 @@ class CoursesService:
                     "page_label": _page_label(ch_pages["start"], ch_pages["end"]),
                     "topics_completed": 0,
                     "topics_total": len(topics),
+                    "reading_units_total": len(units),
+                    "reading_units_completed": 0,
                     "progress_percent": 0,
                     "topics": topics,
                 }
@@ -259,13 +269,7 @@ class CoursesService:
         }
 
     def _count_topics(self, book_id: str) -> int:
-        subs = self.session.scalar(
-            select(func.count())
-            .select_from(SubsectionRow)
-            .where(SubsectionRow.book_id == book_id)
-        )
-        if subs and subs > 0:
-            return int(subs)
+        """Count section-level topics (matches pipeline hierarchy / admin UI)."""
         return int(
             self.session.scalar(
                 select(func.count())
@@ -279,49 +283,83 @@ class CoursesService:
             or 0
         )
 
+    def _topic_ref(
+        self,
+        book_id: str,
+        chapter_id: str,
+        section_id: str,
+        *,
+        topic_id: str,
+        topic_type: str,
+        subsection_id: Optional[str],
+        number: str,
+        title: str,
+    ) -> dict[str, Any]:
+        pages = self._scope_page_range(book_id, chapter_id, section_id, subsection_id)
+        return {
+            "topic_id": topic_id,
+            "topic_type": topic_type,
+            "section_id": section_id,
+            "subsection_id": subsection_id,
+            "number": number,
+            "title": title,
+            "page_start": pages["start"],
+            "page_end": pages["end"],
+            "page_label": _page_label(pages["start"], pages["end"]),
+            "completed": False,
+        }
+
     def _chapter_topics(self, book_id: str, chapter: ChapterRow) -> list[dict[str, Any]]:
+        """Section-level topics with nested subtopics — mirrors pipeline step 6 hierarchy."""
         topics: list[dict[str, Any]] = []
         sections = self.repo.list_sections(book_id, chapter.chapter_id)
         for sec in sections:
             if sec.is_overview or sec.number == OVERVIEW_NUMBER:
                 continue
             subs = self.repo.list_subsections(book_id, sec.section_id)
-            if subs:
-                for sub in subs:
-                    pages = self._scope_page_range(
-                        book_id, chapter.chapter_id, sec.section_id, sub.subsection_id
-                    )
-                    topics.append(
-                        {
-                            "topic_id": sub.subsection_id,
-                            "topic_type": "subsection",
-                            "section_id": sec.section_id,
-                            "subsection_id": sub.subsection_id,
-                            "number": sub.number,
-                            "title": sub.title,
-                            "page_start": pages["start"],
-                            "page_end": pages["end"],
-                            "page_label": _page_label(pages["start"], pages["end"]),
-                            "completed": False,
-                        }
-                    )
-            else:
-                pages = self._scope_page_range(book_id, chapter.chapter_id, sec.section_id, None)
-                topics.append(
-                    {
-                        "topic_id": sec.section_id,
-                        "topic_type": "section",
-                        "section_id": sec.section_id,
-                        "subsection_id": None,
-                        "number": sec.number,
-                        "title": sec.title,
-                        "page_start": pages["start"],
-                        "page_end": pages["end"],
-                        "page_label": _page_label(pages["start"], pages["end"]),
-                        "completed": False,
-                    }
+            subtopics = [
+                self._topic_ref(
+                    book_id,
+                    chapter.chapter_id,
+                    sec.section_id,
+                    topic_id=sub.subsection_id,
+                    topic_type="subsection",
+                    subsection_id=sub.subsection_id,
+                    number=sub.number,
+                    title=sub.title,
                 )
+                for sub in subs
+            ]
+            sec_pages = self._scope_page_range(book_id, chapter.chapter_id, sec.section_id, None)
+            topics.append(
+                {
+                    "topic_id": sec.section_id,
+                    "topic_type": "section",
+                    "section_id": sec.section_id,
+                    "subsection_id": None,
+                    "number": sec.number,
+                    "title": sec.title,
+                    "label": f"Topic {sec.number}",
+                    "page_start": sec_pages["start"],
+                    "page_end": sec_pages["end"],
+                    "page_label": _page_label(sec_pages["start"], sec_pages["end"]),
+                    "subtopics_count": len(subtopics),
+                    "subtopics": subtopics,
+                    "completed": False,
+                }
+            )
         return topics
+
+    def _reading_units(self, topics: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        """Leaf reading targets: subtopics when present, else the section itself."""
+        units: list[dict[str, Any]] = []
+        for topic in topics:
+            subs = topic.get("subtopics") or []
+            if subs:
+                units.extend(subs)
+            else:
+                units.append(topic)
+        return units
 
     def _chapter_page_range(self, book_id: str, chapter_id: str) -> dict[str, Optional[int]]:
         row = self.session.execute(
@@ -548,7 +586,8 @@ class CoursesService:
             return None
         ch = chapters[0]
         topics = self._chapter_topics(book.book_id, ch)
-        if not topics:
+        units = self._reading_units(topics)
+        if not units:
             return {
                 "label": f"{book.subject} Ch.{ch.number}",
                 "book_id": book.book_id,
@@ -556,12 +595,96 @@ class CoursesService:
                 "topic_id": None,
                 "title": ch.title,
             }
-        topic = topics[0]
+        unit = units[0]
         return {
             "label": f"{book.subject} Ch.{ch.number}",
             "book_id": book.book_id,
             "chapter_id": ch.chapter_id,
-            "topic_id": topic["topic_id"],
-            "title": topic["title"],
-            "page_label": topic.get("page_label", ""),
+            "topic_id": unit["topic_id"],
+            "title": unit["title"],
+            "page_label": unit.get("page_label", ""),
         }
+
+    def get_next_topic(
+        self,
+        book_id: str,
+        chapter_id: str,
+        topic_id: str,
+    ) -> Optional[dict[str, Any]]:
+        """Return the next topic in canonical reading order after the current one."""
+        flat = self._flatten_topics(book_id)
+        if not flat:
+            return None
+
+        idx = next(
+            (
+                i
+                for i, t in enumerate(flat)
+                if t["chapter_id"] == chapter_id and t["topic_id"] == topic_id
+            ),
+            None,
+        )
+        if idx is None:
+            return None
+
+        book = self.repo.get_book(book_id)
+        current = flat[idx]
+        next_item = flat[idx + 1] if idx + 1 < len(flat) else None
+        completed_count = idx + 1
+
+        payload: dict[str, Any] = {
+            "book_id": book_id,
+            "subject": book.subject if book else "",
+            "current": {
+                "chapter_id": chapter_id,
+                "chapter_number": current["chapter_number"],
+                "chapter_title": current["chapter_title"],
+                "topic_id": topic_id,
+                "title": current["title"],
+                "index": idx,
+            },
+            "has_next": next_item is not None,
+            "next": None,
+            "progress": {
+                "topics_completed": completed_count,
+                "topics_total": len(flat),
+                "topics_remaining": len(flat) - completed_count,
+                "percent_complete": round((completed_count / len(flat)) * 100) if flat else 0,
+            },
+        }
+
+        if next_item:
+            payload["next"] = {
+                "chapter_id": next_item["chapter_id"],
+                "chapter_number": next_item["chapter_number"],
+                "chapter_title": next_item["chapter_title"],
+                "topic_id": next_item["topic_id"],
+                "title": next_item["title"],
+                "page_label": next_item.get("page_label", ""),
+                "resume_url": (
+                    f"/learn?book={book_id}"
+                    f"&chapter={next_item['chapter_id']}"
+                    f"&topic={next_item['topic_id']}"
+                ),
+            }
+
+        return payload
+
+    def _flatten_topics(self, book_id: str) -> list[dict[str, Any]]:
+        course = self.get_course(book_id)
+        if not course:
+            return []
+
+        flat: list[dict[str, Any]] = []
+        for ch in course["chapters"]:
+            for unit in self._reading_units(ch["topics"]):
+                flat.append(
+                    {
+                        **unit,
+                        "chapter_id": ch["chapter_id"],
+                        "chapter_number": ch["number"],
+                        "chapter_title": ch["title"],
+                        "chapter_roman": ch["roman"],
+                    }
+                )
+        return flat

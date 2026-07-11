@@ -29,8 +29,14 @@ step10_canonical.json
 | `tables` | `table_id` | `book_id` + hierarchy columns |
 | `table_cells` | `id` (auto) | `table_id` |
 | `glossary_entries` | `entry_id` | `book_id` + hierarchy columns |
+| `ingestion_runs` | `run_id` | `book_id` |
+| `book_versions` | `version_id` | `book_id`, `run_id` |
+| `users` | `user_id` | — |
+| `reading_progress` | `id` | `user_id`, `book_id` |
+| `topic_completions` | `id` | `user_id`, `book_id`, topic scope |
 
-Reloading a book **deletes and replaces** all rows for that `book_id` (cascade).
+Reloading a book **deletes and replaces** all canonical rows for that `book_id` (cascade).  
+Ingestion lineage (`ingestion_runs`, `book_versions`) and user progress tables are designed for long-run persistence.
 
 ## Setup
 
